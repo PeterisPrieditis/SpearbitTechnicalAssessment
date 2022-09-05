@@ -49,3 +49,27 @@ contract Implementation {
     }
 }
 ```
+
+**Solution that checks first storage slot**:
+```diff
+contract Implementation {
+
+    function callContract(address a, bytes calldata _calldata) payable external returns (bytes memory) {
+        (bool success , bytes memory ret) =  a.call{value: msg.value}(_calldata);
+        require(success);
+        return ret;
+    }
+
+    function delegatecallContract(address a, bytes calldata _calldata) payable external returns (bytes memory) {
++       bytes32 firstSlot;
++       assembly {
++           firstSlot := sload(0x00)
++       }
++       require(firstSlot != 0x00, "first slot should not be empty! Wrong context!");
+        
+        (bool success, bytes memory ret) =  a.delegatecall(_calldata);
+        require(success);
+        return ret;
+    }
+}
+```
